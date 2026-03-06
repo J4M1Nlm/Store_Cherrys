@@ -1,0 +1,28 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://dpg-d6ii1d14tr6s73cdp2rg-a.oregon-postgres.render.com:5432/store_cherry_twins?sslmode=require
+    username: admin
+    password: uSCVeRJTiag8BeYRPzVfntrX5SaUEpYF
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+
+app:
+  jwt:
+    secret: 1CDqyJu2irzPt3yLXBzZDix6JUmb2WCtMaA9dRHy+GEbtN46Kn7YngMD4fvAUO0F
+    exp-minutes: 60
