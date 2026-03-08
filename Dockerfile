@@ -1,21 +1,24 @@
-# ---------- Build stage ----------
-FROM maven:3.9.9-eclipse-temurin-25 AS build
+# ---------- Build stage (JDK 25 + Maven) ----------
+FROM eclipse-temurin:25-jdk AS build
 WORKDIR /app
+
+# Instala Maven en el build stage
+RUN apt-get update && apt-get install -y --no-install-recommends maven \
+    && rm -rf /var/lib/apt/lists/*
 
 # Cache de dependencias
 COPY pom.xml .
 RUN mvn -q -DskipTests dependency:go-offline
 
-# Compilar
+# Compila el proyecto
 COPY src ./src
 RUN mvn -q -DskipTests clean package
 
-# ---------- Run stage ----------
+# ---------- Run stage (JRE 25) ----------
 FROM eclipse-temurin:25-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
-# Render usa la variable PORT
 ENV PORT=8080
 EXPOSE 8080
 
