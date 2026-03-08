@@ -47,11 +47,22 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+
+                        // Documentacion de Swagger
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
+
                         // Auth público
                         .requestMatchers("/api/auth/**").permitAll()
 
-                        // Catálogo público (ej: GET /api/catalog/**)
-                        .requestMatchers(HttpMethod.GET, "/api/catalog/**").permitAll()
+                        // Catálogo público
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/catalog/**").permitAll()
+
+                        // Carrito para usuarios logeados
+                        .requestMatchers("/api/cart/**").authenticated()
 
                         // Admin (todo lo que empiece con /api/admin)
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
