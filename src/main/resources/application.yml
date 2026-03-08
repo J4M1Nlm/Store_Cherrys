@@ -1,28 +1,29 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 spring:
   datasource:
-    url: jdbc:postgresql://dpg-d6ii1d14tr6s73cdp2rg-a.oregon-postgres.render.com:5432/store_cherry_twins?sslmode=require
-    username: admin
-    password: uSCVeRJTiag8BeYRPzVfntrX5SaUEpYF
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     hikari:
-      maximum-pool-size: 10
-      minimum-idle: 2
-      connection-timeout: 30000
+      maximum-pool-size: ${DB_POOL_MAX:10}
+      minimum-idle: ${DB_POOL_MIN_IDLE:2}
+      connection-timeout: ${DB_POOL_CONN_TIMEOUT_MS:30000}
 
   jpa:
     hibernate:
       ddl-auto: validate
+    open-in-view: false
     properties:
       hibernate:
         jdbc:
           time_zone: UTC
 
   flyway:
-    enabled: true
+    enabled: false
 
 app:
   jwt:
-    secret: 1CDqyJu2irzPt3yLXBzZDix6JUmb2WCtMaA9dRHy+GEbtN46Kn7YngMD4fvAUO0F
-    exp-minutes: 60
+    secret: ${JWT_SECRET}
+    exp-minutes: ${JWT_EXP_MINUTES:60}
