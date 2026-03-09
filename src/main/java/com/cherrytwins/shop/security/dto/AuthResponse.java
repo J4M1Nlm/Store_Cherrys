@@ -1,13 +1,25 @@
 package com.cherrytwins.shop.security.dto;
 
-import lombok.Getter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Getter
 public class AuthResponse {
-    private String token;
-    private String tokenType = "Bearer";
 
-    public AuthResponse(String token){
+    @JsonProperty("token")
+    private final String token;
+
+    @JsonProperty("tokenType")
+    private final String tokenType;
+
+    public AuthResponse(String token) {
         this.token = token;
+        this.tokenType = "Bearer";
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public String getTokenType() {
+        return tokenType;
     }
 }
