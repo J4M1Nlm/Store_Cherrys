@@ -65,8 +65,16 @@ public class SecurityConfig {
                         // Carrito para usuarios logeados
                         .requestMatchers("/api/cart/**").authenticated()
 
+                        .requestMatchers("/api/orders/**").authenticated()
+
                         // Admin (todo lo que empiece con /api/admin)
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // Webhooks (Stripe real) - público
+                        .requestMatchers("/api/payments/webhook/**").permitAll()
+
+                        // Webhooks (Stripe real) - público
+                        .requestMatchers("/api/payments/webhook/**").permitAll()
 
                         // Todo lo demás requiere login
                         .anyRequest().authenticated()
