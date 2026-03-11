@@ -27,3 +27,8 @@ app:
   jwt:
     secret: ${JWT_SECRET}
     exp-minutes: ${JWT_EXP_MINUTES:60}
+  payments:
+    provider: ${PAYMENTS_PROVIDER:stripe}
+    stripe:
+      secret-key: ${STRIPE_SECRET_KEY:}
+      webhook-secret: ${STRIPE_WEBHOOK_SECRET:}

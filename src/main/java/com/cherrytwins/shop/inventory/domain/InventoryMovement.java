@@ -35,6 +35,15 @@ public class InventoryMovement {
     public MovementType getMovementType() { return movementType; }
     public int getQuantity() { return quantity; }
     public String getReason() { return reason; }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(OffsetDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public String getReferenceId() { return referenceId; }
 
     public void setVariantId(Long variantId) { this.variantId = variantId; }

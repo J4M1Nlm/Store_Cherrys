@@ -40,8 +40,8 @@ public class AdminCouponService {
         });
 
         Coupon c = new Coupon();
-        apply(req, c, true);
         c.setCode(code);
+        apply(req, c, true);
 
         c = couponRepository.save(c);
         return toResponse(c);
@@ -89,7 +89,6 @@ public class AdminCouponService {
         if (dt == DiscountType.PERCENT && (dv < 1 || dv > 100)) {
             throw new BadRequestException("PERCENT discountValue must be between 1 and 100");
         }
-
         if (dt == DiscountType.FIXED && dv <= 0) {
             throw new BadRequestException("FIXED discountValue must be > 0 (cents)");
         }
@@ -102,6 +101,7 @@ public class AdminCouponService {
         c.setMaxRedemptions(req.getMaxRedemptions());
         c.setPerUserLimit(req.getPerUserLimit());
         c.setMinOrderCents(req.getMinOrderCents());
+
         if (req.getActive() != null) c.setActive(req.getActive());
         else if (creating) c.setActive(true);
     }
