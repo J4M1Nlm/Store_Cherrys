@@ -49,32 +49,39 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
 
-                        // Documentacion de Swagger
+                        // Swagger (público)
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
 
+                        // Webhooks de pago (público) - Stripe real
+                        .requestMatchers("/api/payments/webhook/**").permitAll()
+
                         // Auth público
                         .requestMatchers("/api/auth/**").permitAll()
 
-                        // Catálogo público
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/catalog/**").permitAll()
+                        // Catálogo público (solo GET)
+                        .requestMatchers(HttpMethod.GET, "/api/catalog/**").permitAll()
 
-                        // Carrito para usuarios logeados
-                        .requestMatchers("/api/cart/**").authenticated()
-
-                        .requestMatchers("/api/orders/**").authenticated()
-
-                        // Admin (todo lo que empiece con /api/admin)
+                        // Admin
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // Webhooks (Stripe real) - público
-                        .requestMatchers("/api/payments/webhook/**").permitAll()
+                        // Users (perfil/direcciones)
+                        .requestMatchers("/api/users/**").authenticated()
 
-                        // Webhooks (Stripe real) - público
-                        .requestMatchers("/api/payments/webhook/**").permitAll()
+                        // Cart
+                        .requestMatchers("/api/cart/**").authenticated()
+
+                        // Orders + checkout
+                        .requestMatchers("/api/orders/**").authenticated()
+
+                        // Payments (init + simulate) para usuarios logeados
+                        .requestMatchers("/api/payments/**").authenticated()
+
+                        // Coupons customer (validate) para usuarios logeados
+                        .requestMatchers("/api/coupons/**").authenticated()
 
                         // Todo lo demás requiere login
                         .anyRequest().authenticated()

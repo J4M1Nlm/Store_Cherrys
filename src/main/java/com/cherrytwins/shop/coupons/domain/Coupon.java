@@ -62,6 +62,8 @@ public class Coupon {
     public Integer getPerUserLimit() { return perUserLimit; }
     public int getMinOrderCents() { return minOrderCents; }
     public boolean isActive() { return active; }
+    public OffsetDateTime getCreatedAt() { return createdAt; }
+    public OffsetDateTime getUpdatedAt() { return updatedAt; }
 
     public void setCode(String code) { this.code = code; }
     public void setDiscountType(DiscountType discountType) { this.discountType = discountType; }
