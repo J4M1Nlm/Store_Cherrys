@@ -2,9 +2,10 @@ package com.cherrytwins.shop.payments.web;
 
 import com.cherrytwins.shop.payments.service.PaymentService;
 import com.cherrytwins.shop.payments.service.provider.StripeProperties;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
-import com.stripe.model.PaymentIntent;
 import com.stripe.net.Webhook;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,16 +23,18 @@ public class PaymentWebhookController {
 
     private final StripeProperties stripeProperties;
     private final PaymentService paymentService;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public PaymentWebhookController(StripeProperties stripeProperties, PaymentService paymentService) {
         this.stripeProperties = stripeProperties;
         this.paymentService = paymentService;
     }
 
-    @Operation(summary = "Webhook Stripe", description = "Valida firma y procesa eventos payment_intent.succeeded / payment_intent.payment_failed")
+    @Operation(summary = "Webhook Stripe", description = "Valida firma y procesa payment_intent.succeeded / payment_intent.payment_failed")
     @PostMapping("/stripe")
     public ResponseEntity<String> stripeWebhook(HttpServletRequest request,
-                                                @RequestHeader(value = "Stripe-Signature", required = false) String sigHeader) throws Exception {
+                                                @RequestHeader(value = "Stripe-Signature", required = false) String sigHeader)
+            throws Exception {
 
         String payload = StreamUtils.copyToString(request.getInputStream(), StandardCharsets.UTF_8);
 
@@ -51,31 +54,41 @@ public class PaymentWebhookController {
             return ResponseEntity.status(400).body("Invalid signature");
         }
 
-        // Procesar eventos clave
-        switch (event.getType()) {
-            case "payment_intent.succeeded" -> {
-                PaymentIntent pi = (PaymentIntent) event.getDataObjectDeserializer()
-                        .getObject()
-                        .orElse(null);
+        // ✅ Siempre extraemos IDs desde payload raw (no dependemos del deserializer)
+        JsonNode root = mapper.readTree(payload);
+        JsonNode obj = root.path("data").path("object");
 
-                if (pi != null) {
-                    paymentService.markCapturedByProviderRef(pi.getId());
-                }
+        String eventType = event.getType();
+
+        // payment_intent id directo
+        String paymentIntentId = null;
+        if (eventType.startsWith("payment_intent.")) {
+            paymentIntentId = textOrNull(obj.path("id"));
+        }
+
+        // si llega un charge.* (a veces también es útil), trae payment_intent dentro del charge
+        if (paymentIntentId == null && eventType.startsWith("charge.")) {
+            paymentIntentId = textOrNull(obj.path("payment_intent"));
+        }
+
+        switch (eventType) {
+            case "payment_intent.succeeded" -> {
+                if (paymentIntentId != null) paymentService.markCapturedByProviderRef(paymentIntentId);
             }
             case "payment_intent.payment_failed" -> {
-                PaymentIntent pi = (PaymentIntent) event.getDataObjectDeserializer()
-                        .getObject()
-                        .orElse(null);
-
-                if (pi != null) {
-                    paymentService.markFailedByProviderRef(pi.getId());
-                }
+                if (paymentIntentId != null) paymentService.markFailedByProviderRef(paymentIntentId);
             }
             default -> {
-                // Ignoramos otros por ahora
+                // ignoramos otros eventos pero respondemos 200
             }
         }
 
         return ResponseEntity.ok("ok");
+    }
+
+    private String textOrNull(JsonNode node) {
+        if (node == null) return null;
+        String s = node.asText(null);
+        return (s == null || s.isBlank()) ? null : s;
     }
 }
