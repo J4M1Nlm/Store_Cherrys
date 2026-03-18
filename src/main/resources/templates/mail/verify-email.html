@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="es">
+<body style="font-family: Arial, sans-serif; background:#f6f6f6; padding:20px;">
+<div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:8px;padding:20px;">
+    <h2>Verifica tu correo</h2>
+    <p>Hola <b th:text="${name}">cliente</b>,</p>
+    <p>Gracias por registrarte. Para activar tu cuenta, haz clic en el botón:</p>
+
+    <p style="margin:24px 0;">
+        <a th:href="${verifyUrl}"
+           style="background:#111827;color:#fff;text-decoration:none;padding:12px 18px;border-radius:6px;display:inline-block;">
+            Verificar correo
+        </a>
+    </p>
+
+    <p style="color:#6b7280;font-size:12px;">
+        Si tú no solicitaste esto, ignora este correo.
+    </p>
+</div>
+</body>
+</html>

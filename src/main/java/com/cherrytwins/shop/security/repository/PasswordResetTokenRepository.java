@@ -1,0 +1,11 @@
+package com.cherrytwins.shop.security.repository;
+
+import com.cherrytwins.shop.security.domain.PasswordResetToken;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface PasswordResetTokenRepository extends JpaRepository<PasswordResetToken, Long> {
+    Optional<PasswordResetToken> findByTokenHash(String tokenHash);
+    void deleteAllByUserId(Long userId);
+}

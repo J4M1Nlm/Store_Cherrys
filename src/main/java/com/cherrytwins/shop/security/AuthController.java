@@ -1,12 +1,15 @@
 package com.cherrytwins.shop.security;
 
+import com.cherrytwins.shop.common.util.RateLimiterService;
 import com.cherrytwins.shop.security.dto.AuthResponse;
+import com.cherrytwins.shop.security.dto.ForgotPasswordRequest;
 import com.cherrytwins.shop.security.dto.LoginRequest;
 import com.cherrytwins.shop.security.dto.RegisterRequest;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +20,16 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
-    public AuthController(AuthService authService) { this.authService = authService; }
+    private final AuthEmailService authEmailService;
+    private final RateLimiterService rateLimiterService;
+
+    public AuthController(AuthService authService,
+                          AuthEmailService authEmailService,
+                          RateLimiterService rateLimiterService) {
+        this.authService = authService;
+        this.authEmailService = authEmailService;
+        this.rateLimiterService = rateLimiterService;
+    }
 
     @Operation(summary = "Registrar usuario", description = "Crea un usuario CUSTOMER y devuelve un JWT.")
     @ApiResponses({
@@ -39,5 +51,36 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         String token = authService.login(request);
         return ResponseEntity.ok(new AuthResponse(token));
+    }
+
+    @Operation(summary = "Olvidé mi contraseña", description = "Envía correo con link de recuperación. Siempre devuelve 204.")
+    @PostMapping("/password/forgot")
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest req,
+                                               HttpServletRequest request) {
+
+        String email = req.getEmail().trim().toLowerCase();
+        String ip = extractIp(request);
+
+        String emailKey = "forgot:email:" + email;
+        String ipKey = "forgot:ip:" + ip;
+
+        // 1/min por email y por IP
+        boolean okEmail = rateLimiterService.tryAcquire(emailKey);
+        boolean okIp = rateLimiterService.tryAcquire(ipKey);
+
+        if (okEmail && okIp) {
+            authEmailService.forgotPassword(email);
+        }
+
+        // ✅ SIEMPRE responder 204 (no filtrar si existe email)
+        return ResponseEntity.noContent().build();
+    }
+
+    private String extractIp(HttpServletRequest request) {
+        String xff = request.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isBlank()) {
+            return xff.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }
