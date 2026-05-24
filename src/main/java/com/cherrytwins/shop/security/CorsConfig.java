@@ -17,8 +17,8 @@ public class CorsConfig {
 
         // Orígenes permitidos
         config.setAllowedOrigins(List.of(
-                "http://127.0.0.1:3000",
-                "http://localhost:3000",
+                "http://127.0.0.1:5143",
+                "http://localhost:5143",
                 "https://pagina-cherry-twins.onrender.com"
         ));
 
