@@ -292,6 +292,14 @@ public class AdminCatalogService {
     }
 
     // -------- Images
+    @Transactional(readOnly = true)
+    public List<ProductImageResponse> listProductImages(Long productId) {
+        productRepository.findById(productId).orElseThrow(() -> new NotFoundException("Product not found"));
+        return productImageRepository.findAllByProductIdOrderBySortOrderAscIdAsc(productId)
+                .stream().map(i -> new ProductImageResponse(i.getId(), i.getUrl(), i.getAltText(), i.getSortOrder()))
+                .toList();
+    }
+
     @Transactional
     public List<ProductImageResponse> addProductImage(Long productId, AdminProductImageRequest req) {
         Product p = productRepository.findById(productId).orElseThrow(() -> new NotFoundException("Product not found"));
