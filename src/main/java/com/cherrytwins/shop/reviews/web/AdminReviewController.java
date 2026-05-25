@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Reviews (Admin)", description = "Moderación de reseñas")
@@ -21,6 +22,7 @@ public class AdminReviewController {
     }
 
     @Operation(summary = "Listar reseñas por producto (incluye privadas)")
+    @Transactional(readOnly = true)
     @GetMapping
     public Page<ReviewResponse> list(@RequestParam Long productId,
                                      @RequestParam(defaultValue = "0") int page,
