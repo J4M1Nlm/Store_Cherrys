@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Auth", description = "Registro e inicio de sesión con JWT")
@@ -22,13 +23,16 @@ public class AuthController {
     private final AuthService authService;
     private final AuthEmailService authEmailService;
     private final RateLimiterService rateLimiterService;
+    private final PasswordEncoder passwordEncoder;
 
     public AuthController(AuthService authService,
                           AuthEmailService authEmailService,
-                          RateLimiterService rateLimiterService) {
+                          RateLimiterService rateLimiterService,
+                          PasswordEncoder passwordEncoder) {
         this.authService = authService;
         this.authEmailService = authEmailService;
         this.rateLimiterService = rateLimiterService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Operation(summary = "Registrar usuario", description = "Crea un usuario CUSTOMER y devuelve un JWT.")
@@ -38,7 +42,8 @@ public class AuthController {
     })
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        String token = authService.register(request);
+        String hashedPassword = passwordEncoder.encode(request.getPassword());
+        String token = authService.register(request, hashedPassword);
         return ResponseEntity.ok(new AuthResponse(token));
     }
 
