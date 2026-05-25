@@ -4,6 +4,7 @@ import com.cherrytwins.shop.common.pagination.PageResponse;
 import com.cherrytwins.shop.orders.domain.OrderStatus;
 import com.cherrytwins.shop.orders.service.AdminOrderService;
 import com.cherrytwins.shop.orders.service.OrderQueryService;
+import com.cherrytwins.shop.orders.web.dto.OrderDetailResponse;
 import com.cherrytwins.shop.orders.web.dto.OrderSummaryResponse;
 import com.cherrytwins.shop.orders.web.dto.UpdateOrderStatusRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,6 +34,12 @@ public class AdminOrderController {
                                                    @RequestParam(defaultValue = "0") int page,
                                                    @RequestParam(defaultValue = "20") int size) {
         return orderQueryService.adminOrders(status, page, size);
+    }
+
+    @Operation(summary = "Obtener detalle de orden")
+    @GetMapping("/{orderId}")
+    public OrderDetailResponse getOrder(@PathVariable Long orderId) {
+        return orderQueryService.adminOrderDetail(orderId);
     }
 
     @Operation(summary = "Cambiar status de una orden")
