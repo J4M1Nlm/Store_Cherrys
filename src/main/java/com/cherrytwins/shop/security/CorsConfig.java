@@ -20,7 +20,8 @@ public class CorsConfig {
                 "http://127.0.0.1:5173",
                 "http://localhost:5173",
                 "https://pagina-cherry-twins.onrender.com",
-                "https://store-cherrys.onrender.com"
+                "https://store-cherrys.onrender.com",
+                "https://web-store-cherrys.onrender.com"
         ));
 
         // Métodos permitidos
