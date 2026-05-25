@@ -101,7 +101,7 @@ public class CatalogService {
                     .orElseThrow(() -> new NotFoundException("Category not found"));
         }
 
-       Sort s = parseSort(sort);
+        Sort s = parseSort(sort);
         Pageable pageable = PageRequest.of(page == null ? 0 : page, size == null ? 20 : size, s);
 
         Specification<Product> spec = Specification.where(ProductSpecifications.activeOnly(true));
