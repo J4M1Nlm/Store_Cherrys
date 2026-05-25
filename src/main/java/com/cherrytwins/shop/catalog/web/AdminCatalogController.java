@@ -83,6 +83,40 @@ public class AdminCatalogController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Listar productos (admin)")
+    @GetMapping("/products")
+    public com.cherrytwins.shop.common.pagination.PageResponse<com.cherrytwins.shop.catalog.web.dto.ProductListItemResponse> listProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String sort
+    ) {
+        return adminCatalogService.listProducts(page, size, sort);
+    }
+
+    @Operation(summary = "Detalle de producto (admin)")
+    @GetMapping("/products/{id}")
+    public com.cherrytwins.shop.catalog.web.dto.ProductDetailResponse getProduct(@PathVariable Long id) {
+        return adminCatalogService.getProduct(id);
+    }
+
+    @Operation(summary = "Listar variantes de producto (admin)")
+    @GetMapping("/products/{id}/variants")
+    public List<com.cherrytwins.shop.catalog.web.dto.ProductVariantResponse> getProductVariants(@PathVariable Long id) {
+        return adminCatalogService.listProductVariants(id);
+    }
+
+    @Operation(summary = "Listar categorías (admin)")
+    @GetMapping("/categories")
+    public List<com.cherrytwins.shop.catalog.web.dto.CategoryResponse> listCategories() {
+        return adminCatalogService.listCategories();
+    }
+
+    @Operation(summary = "Detalle de categoría (admin)")
+    @GetMapping("/categories/{id}")
+    public com.cherrytwins.shop.catalog.web.dto.CategoryResponse getCategory(@PathVariable Long id) {
+        return adminCatalogService.getCategory(id);
+    }
+
     @Operation(summary = "Agregar imagen a producto")
     @PostMapping("/products/{productId}/images")
     public List<ProductImageResponse> addImage(@PathVariable Long productId, @Valid @RequestBody AdminProductImageRequest req) {
