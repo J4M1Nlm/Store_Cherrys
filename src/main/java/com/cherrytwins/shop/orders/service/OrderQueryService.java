@@ -12,6 +12,7 @@ import com.cherrytwins.shop.orders.web.dto.OrderItemResponse;
 import com.cherrytwins.shop.orders.web.dto.OrderSummaryResponse;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -33,6 +34,7 @@ public class OrderQueryService {
         return PageResponse.from(p);
     }
 
+    @Transactional(readOnly = true)
     public OrderDetailResponse myOrderDetail(Long userId, Long orderId) {
         Order o = orderRepository.findById(orderId).orElseThrow(() -> new NotFoundException("Order not found"));
         if (o.getUserId() == null || !o.getUserId().equals(userId)) throw new NotFoundException("Order not found");
@@ -41,6 +43,7 @@ public class OrderQueryService {
         return toDetail(o, items);
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<OrderSummaryResponse> adminOrders(OrderStatus status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
@@ -53,6 +56,13 @@ public class OrderQueryService {
         );
 
         return PageResponse.from(mapped);
+    }
+
+    @Transactional(readOnly = true)
+    public OrderDetailResponse adminOrderDetail(Long orderId) {
+        Order o = orderRepository.findById(orderId).orElseThrow(() -> new NotFoundException("Order not found"));
+        List<OrderItem> items = orderItemRepository.findAllByOrderIdOrderByIdAsc(orderId);
+        return toDetail(o, items);
     }
 
     private OrderDetailResponse toDetail(Order o, List<OrderItem> items) {
