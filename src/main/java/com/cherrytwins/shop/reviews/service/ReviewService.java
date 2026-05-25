@@ -27,6 +27,7 @@ public class ReviewService {
                 .map(this::toResponse);
     }
 
+    @Transactional(readOnly = true)
     public Page<ReviewResponse> adminReviews(Long productId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return reviewRepository.findAllByProductIdOrderByCreatedAtDesc(productId, pageable)
