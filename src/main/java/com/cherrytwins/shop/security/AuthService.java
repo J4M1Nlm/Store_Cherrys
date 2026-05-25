@@ -29,14 +29,14 @@ public class AuthService {
     }
 
     @Transactional
-    public String register(RegisterRequest req) {
+    public String register(RegisterRequest req, String hashedPassword) {
         userRepository.findByEmailIgnoreCase(req.getEmail()).ifPresent(u -> {
             throw new BadRequestException("Email already exists");
         });
 
         User u = new User();
         u.setEmail(req.getEmail().trim().toLowerCase());
-        u.setPasswordHash(passwordEncoder.encode(req.getPassword()));
+        u.setPasswordHash(hashedPassword);
         u.setFullName(req.getFullName());
         u.setPhone(req.getPhone());
         u.setRole(UserRole.CUSTOMER);
@@ -48,7 +48,7 @@ public class AuthService {
         u = userRepository.save(u);
 
         // ✅ 1) envía correo de verificación (real)
-        // authEmailService.sendVerificationEmail(u.getId());
+        authEmailService.sendVerificationEmail(u.getId());
 
         // (opcional) puedes devolver token aunque no esté verificado,
         // o devolver 201 y pedir que verifique. Yo recomiendo devolver token
