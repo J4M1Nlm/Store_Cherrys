@@ -117,6 +117,12 @@ public class AdminCatalogController {
         return adminCatalogService.getCategory(id);
     }
 
+    @Operation(summary = "Listar imágenes de producto (admin)")
+    @GetMapping("/products/{productId}/images")
+    public List<ProductImageResponse> getProductImages(@PathVariable Long productId) {
+        return adminCatalogService.listProductImages(productId);
+    }
+
     @Operation(summary = "Agregar imagen a producto")
     @PostMapping("/products/{productId}/images")
     public List<ProductImageResponse> addImage(@PathVariable Long productId, @Valid @RequestBody AdminProductImageRequest req) {
