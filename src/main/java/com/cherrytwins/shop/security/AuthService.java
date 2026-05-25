@@ -48,7 +48,7 @@ public class AuthService {
         u = userRepository.save(u);
 
         // ✅ 1) envía correo de verificación (real)
-        authEmailService.sendVerificationEmail(u.getId());
+        // authEmailService.sendVerificationEmail(u.getId());
 
         // (opcional) puedes devolver token aunque no esté verificado,
         // o devolver 201 y pedir que verifique. Yo recomiendo devolver token
