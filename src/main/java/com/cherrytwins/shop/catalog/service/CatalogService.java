@@ -101,14 +101,22 @@ public class CatalogService {
                     .orElseThrow(() -> new NotFoundException("Category not found"));
         }
 
-        Sort s = parseSort(sort);
+       Sort s = parseSort(sort);
         Pageable pageable = PageRequest.of(page == null ? 0 : page, size == null ? 20 : size, s);
 
-        Specification<Product> spec = Specification.where(ProductSpecifications.activeOnly(true))
-                .and(ProductSpecifications.nameOrSlugContains(q))
-                .and(ProductSpecifications.byArtistId(artistId))
-                .and(ProductSpecifications.byCategoryId(categoryId))
-                .and(ProductSpecifications.priceBetween(minPriceCents, maxPriceCents));
+        Specification<Product> spec = Specification.where(ProductSpecifications.activeOnly(true));
+        if (ProductSpecifications.nameOrSlugContains(q) != null) {
+            spec = spec.and(ProductSpecifications.nameOrSlugContains(q));
+        }
+        if (ProductSpecifications.byArtistId(artistId) != null) {
+            spec = spec.and(ProductSpecifications.byArtistId(artistId));
+        }
+        if (ProductSpecifications.byCategoryId(categoryId) != null) {
+            spec = spec.and(ProductSpecifications.byCategoryId(categoryId));
+        }
+        if (ProductSpecifications.priceBetween(minPriceCents, maxPriceCents) != null) {
+            spec = spec.and(ProductSpecifications.priceBetween(minPriceCents, maxPriceCents));
+        }
 
         Page<Product> products = productRepository.findAll(spec, pageable);
 
