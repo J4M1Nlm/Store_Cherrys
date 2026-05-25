@@ -209,6 +209,77 @@ public class AdminCatalogService {
         productRepository.deleteById(id);
     }
 
+    @Transactional(readOnly = true)
+    public com.cherrytwins.shop.common.pagination.PageResponse<com.cherrytwins.shop.catalog.web.dto.ProductListItemResponse> listProducts(int page, int size, String sort) {
+        org.springframework.data.domain.Sort s = parseSort(sort);
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page < 0 ? 0 : page, size <= 0 ? 20 : size, s);
+
+        org.springframework.data.domain.Page<Product> products = productRepository.findAll(pageable);
+
+        List<Long> ids = products.getContent().stream().map(Product::getId).toList();
+        Map<Long, String> mainImage = new HashMap<>();
+        if (!ids.isEmpty()) {
+            for (Long pid : ids) {
+                List<ProductImage> imgs = productImageRepository.findAllByProductIdOrderBySortOrderAscIdAsc(pid);
+                mainImage.put(pid, imgs.isEmpty() ? null : imgs.get(0).getUrl());
+            }
+        }
+
+        Map<Long, String> artistSlugMap = artistRepository.findAllById(
+                products.getContent().stream().map(Product::getArtistId).filter(Objects::nonNull).distinct().toList()
+        ).stream().collect(Collectors.toMap(Artist::getId, Artist::getSlug));
+
+        Map<Long, String> categorySlugMap = categoryRepository.findAllById(
+                products.getContent().stream().map(Product::getCategoryId).filter(Objects::nonNull).distinct().toList()
+        ).stream().collect(Collectors.toMap(Category::getId, Category::getSlug));
+
+        org.springframework.data.domain.Page<com.cherrytwins.shop.catalog.web.dto.ProductListItemResponse> mapped = products.map(p -> new com.cherrytwins.shop.catalog.web.dto.ProductListItemResponse(
+                p.getId(), p.getName(), p.getSlug(), p.isActive(), p.getBasePriceCents(), p.getCurrency(),
+                mainImage.get(p.getId()), p.getArtistId() == null ? null : artistSlugMap.get(p.getArtistId()),
+                p.getCategoryId() == null ? null : categorySlugMap.get(p.getCategoryId())
+        ));
+
+        return com.cherrytwins.shop.common.pagination.PageResponse.from(mapped);
+    }
+
+    @Transactional(readOnly = true)
+    public com.cherrytwins.shop.catalog.web.dto.ProductDetailResponse getProduct(Long id) {
+        Product p = productRepository.findById(id).orElseThrow(() -> new NotFoundException("Product not found"));
+        return buildAdminDetail(p);
+    }
+
+    @Transactional(readOnly = true)
+    public List<com.cherrytwins.shop.catalog.web.dto.ProductVariantResponse> listProductVariants(Long productId) {
+        productRepository.findById(productId).orElseThrow(() -> new NotFoundException("Product not found"));
+        return productVariantRepository.findAllByProductIdOrderByIdAsc(productId)
+                .stream().map(this::toVariantResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<com.cherrytwins.shop.catalog.web.dto.CategoryResponse> listCategories() {
+        return categoryRepository.findAllByOrderByNameAsc()
+                .stream().map(c -> new com.cherrytwins.shop.catalog.web.dto.CategoryResponse(c.getId(), c.getName(), c.getSlug(), c.getParentId()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public com.cherrytwins.shop.catalog.web.dto.CategoryResponse getCategory(Long id) {
+        Category c = categoryRepository.findById(id).orElseThrow(() -> new NotFoundException("Category not found"));
+        return new com.cherrytwins.shop.catalog.web.dto.CategoryResponse(c.getId(), c.getName(), c.getSlug(), c.getParentId());
+    }
+
+    private org.springframework.data.domain.Sort parseSort(String sort) {
+        if (sort == null || sort.isBlank()) return org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt");
+        return switch (sort) {
+            case "price_asc" -> org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "basePriceCents");
+            case "price_desc" -> org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "basePriceCents");
+            case "name_asc" -> org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "name");
+            case "name_desc" -> org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "name");
+            case "createdAt_asc" -> org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "createdAt");
+            default -> org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt");
+        };
+    }
+
     @Transactional
     public ProductDetailResponse setProductActive(Long id, boolean value) {
         Product p = productRepository.findById(id).orElseThrow(() -> new NotFoundException("Product not found"));
