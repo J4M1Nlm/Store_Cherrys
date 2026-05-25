@@ -10,17 +10,22 @@ import com.cherrytwins.shop.security.repository.EmailVerificationTokenRepository
 import com.cherrytwins.shop.security.repository.PasswordResetTokenRepository;
 import com.cherrytwins.shop.security.util.TokenUtil;
 import com.cherrytwins.shop.users.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
-import org.springframework.transaction.annotation.Propagation;
 import java.util.Map;
 
 @Service
 public class AuthEmailService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthEmailService.class);
 
     private final EmailService emailService;
     private final UserRepository userRepository;
@@ -52,32 +57,38 @@ public class AuthEmailService {
         this.mailTemplateService = mailTemplateService;
     }
 
-    @Transactional
+    @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void sendVerificationEmail(Long userId) {
-        var user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        try {
+            var user = userRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundException("User not found"));
 
-        if (user.isEmailVerified()) return;
+            if (user.isEmailVerified()) return;
 
-        evtRepo.deleteAllByUserId(userId);
+            evtRepo.deleteAllByUserId(userId);
 
-        String rawToken = TokenUtil.generateRawToken();
-        String hash = TokenUtil.sha256Hex(rawToken);
+            String rawToken = TokenUtil.generateRawToken();
+            String hash = TokenUtil.sha256Hex(rawToken);
 
-        EmailVerificationToken t = new EmailVerificationToken();
-        t.setUserId(userId);
-        t.setTokenHash(hash);
-        t.setExpiresAt(OffsetDateTime.now().plusMinutes(verifyExpMinutes));
-        evtRepo.save(t);
+            EmailVerificationToken t = new EmailVerificationToken();
+            t.setUserId(userId);
+            t.setTokenHash(hash);
+            t.setExpiresAt(OffsetDateTime.now().plusMinutes(verifyExpMinutes));
+            evtRepo.save(t);
 
-        String verifyUrl = frontendBaseUrl + "/verify-email?token=" + rawToken;
+            String verifyUrl = frontendBaseUrl + "/verify-email?token=" + rawToken;
 
-        String html = mailTemplateService.render("verify-email", Map.of(
-                "name", user.getFullName() == null ? "cliente" : user.getFullName(),
-                "verifyUrl", verifyUrl
-        ));
+            String html = mailTemplateService.render("verify-email", Map.of(
+                    "name", user.getFullName() == null ? "cliente" : user.getFullName(),
+                    "verifyUrl", verifyUrl
+            ));
 
-        emailService.sendHtml(user.getEmail(), "Verifica tu correo - CherryTwins", html);
+            emailService.sendHtml(user.getEmail(), "Verifica tu correo - CherryTwins", html);
+            log.info("Verification email sent successfully to userId={}", userId);
+        } catch (Exception e) {
+            log.error("Failed to send verification email to userId={}", userId, e);
+        }
     }
 
     @Transactional
